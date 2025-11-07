@@ -53,7 +53,8 @@ terraform destroy
 
 Here’s a preview of the static website deployed via Terraform:
 
-![Website Preview](./website/screenshot.png)  <!-- This will display the live site in place of a screenshot -->
+ <img width="1920" height="1080" alt="Screenshot 2025-11-07 131249" src="https://github.com/user-attachments/assets/133c0261-195b-4da8-9f15-90542072b69b" />
+<!-- This will display the live site in place of a screenshot -->
 
 ### Live Website
 

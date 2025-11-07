@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Virtualization Unveiled — KVM · Docker · Kubernetes</title>
+  <meta name="description" content="An educational static site explaining the fundamentals of KVM, Docker, and Kubernetes with diagrams, comparisons and quick how-tos.">
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#98a0b3;--accent:#6ee7b7;--glass:rgba(255,255,255,0.04);--glass-2:rgba(255,255,255,0.02)}
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; margin:0;background:linear-gradient(180deg,#071026 0%, #081226 100%);color:#e6eef6;line-height:1.5}
+    .container{max-width:1100px;margin:36px auto;padding:24px}
+    header{display:flex;gap:20px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;color:#042028;font-weight:700;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+    h1{font-size:26px;margin:0}
+    p.lead{color:var(--muted);margin-top:6px}
+
+    nav{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+    .btn{background:var(--glass);padding:8px 12px;border-radius:8px;color:var(--accent);border:1px solid rgba(255,255,255,0.03);cursor:pointer;font-weight:600}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:20px;margin-top:24px}
+
+    .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.02));padding:18px;border-radius:14px;border:1px solid rgba(255,255,255,0.03)}
+    h2{margin:0 0 10px 0}
+    .section{margin-bottom:18px}
+
+    .diagram{display:flex;gap:12px;align-items:center}
+    .diagram svg{max-width:100%}
+
+    .feature-list{display:flex;flex-direction:column;gap:12px}
+    .feature{display:flex;gap:12px}
+    .badge{min-width:44px;height:44px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center;font-weight:700}
+
+    pre{background:rgba(0,0,0,0.25);padding:12px;border-radius:8px;overflow:auto;font-size:13px}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;color:#dbeafe}
+
+    aside .card{position:sticky;top:24px}
+    .toc{display:flex;flex-direction:column;gap:8px}
+    .toc a{color:var(--muted);text-decoration:none}
+    .toc a:hover{color:var(--accent)}
+
+    .compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .compare .col{padding:12px;border-radius:10px;background:var(--glass-2)}
+
+    footer{text-align:center;color:var(--muted);margin-top:24px;padding:18px}
+
+    /* responsive */
+    @media (max-width:980px){.grid{grid-template-columns:1fr;}.compare{grid-template-columns:1fr}}
+
+    /* small interactive */
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tab{padding:8px 12px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+    .tab.active{background:linear-gradient(90deg,#06202a,#0b2940);color:var(--accent)}
+
+    .hidden{display:none}
+    .copy-btn{background:transparent;border:1px solid rgba(255,255,255,0.05);padding:6px;border-radius:8px;color:var(--muted);cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">VZ</div>
+      <div>
+        <h1>Virtualization Unveiled</h1>
+        <p class="lead">A concise educational guide to KVM, Docker, and Kubernetes — what they are, how they differ, and quick hands-on examples.</p>
+      </div>
+    </header>
+
+    <nav>
+      <button class="btn" onclick="scrollToSection('kvm')">KVM</button>
+      <button class="btn" onclick="scrollToSection('docker')">Docker</button>
+      <button class="btn" onclick="scrollToSection('k8s')">Kubernetes</button>
+      <button class="btn" onclick="scrollToSection('compare')">Compare</button>
+      <button class="btn" onclick="scrollToSection('glossary')">Glossary</button>
+    </nav>
+
+    <div class="grid">
+      <main>
+        <section id="intro" class="card section">
+          <h2>Introduction</h2>
+          <p>Virtualization and containerization are foundational technologies for modern infrastructure. This page explains three major technologies at different layers:</p>
+          <ul>
+            <li><strong>KVM</strong> — hardware virtualization (full VMs).</li>
+            <li><strong>Docker</strong> — container runtime (process isolation using OS features).</li>
+            <li><strong>Kubernetes</strong> — orchestration system for running containers at scale.</li>
+          </ul>
+          <div style="margin-top:12px;" class="diagram">
+            <!-- Simple inline SVG showing layers -->
+            <svg width="100%" height="120" viewBox="0 0 800 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Layer diagram">
+              <rect x="10" y="10" width="780" height="120" rx="14" fill="#051827" stroke="#07263a" />
+              <g transform="translate(30,24)">
+                <rect x="0" y="0" width="220" height="80" rx="10" fill="#072b2e" />
+                <text x="110" y="40" fill="#8ef6c6" font-size="12" font-weight="700" text-anchor="middle">Hardware + BIOS</text>
+                <rect x="260" y="0" width="220" height="80" rx="10" fill="#08304a" />
+                <text x="370" y="40" fill="#93c5fd" font-size="12" font-weight="700" text-anchor="middle">KVM / Hypervisor</text>
+                <rect x="520" y="0" width="240" height="80" rx="10" fill="#1f2937" />
+                <text x="640" y="40" fill="#c7d2fe" font-size="12" font-weight="700" text-anchor="middle">Containers (Docker)</text>
+              </g>
+            </svg>
+          </div>
+        </section>
+
+        <section id="kvm" class="card section">
+          <h2>KVM — Kernel-based Virtual Machine</h2>
+          <p>KVM is a Linux kernel module that turns the kernel into a hypervisor. It enables full virtual machines with separate kernels. Each VM runs a complete OS and has strong isolation and dedicated virtualized hardware.</p>
+
+          <div class="feature-list">
+            <div class="feature"><div class="badge">1</div><div><strong>Use cases:</strong> multi-tenant isolation, running different OS versions, legacy apps.</div></div>
+            <div class="feature"><div class="badge">2</div><div><strong>Pros:</strong> strong isolation, hardware acceleration (VT-x, AMD-V).</div></div>
+            <div class="feature"><div class="badge">3</div><div><strong>Cons:</strong> higher overhead — memory and boot time compared to containers.</div></div>
+          </div>
+
+          <h3 style="margin-top:12px">Quick Commands</h3>
+          <pre><code># install (Debian/Ubuntu)
+sudo apt update
+sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients virtinst
+
+# create a VM from ISO (example)
+virt-install --name testvm --vcpus 2 --memory 2048 --cdrom /path/to/ubuntu.iso --disk size=20
+
+# list VMs
+virsh list --all
+</code></pre>
+        </section>
+
+        <section id="docker" class="card section">
+          <h2>Docker — Containers & Image-based Packaging</h2>
+          <p>Docker packages applications and their dependencies into images and runs them as lightweight containers using namespaces and cgroups for isolation. Containers share the host kernel, making them fast and resource-efficient.</p>
+
+          <div class="feature-list">
+            <div class="feature"><div class="badge">Use</div><div>Microservices, reproducible builds, developer workflows.</div></div>
+            <div class="feature"><div class="badge">Pros</div><div>Low overhead, fast startup, portable images.</div></div>
+            <div class="feature"><div class="badge">Cons</div><div>Weaker kernel-level isolation than VMs; kernel compatibility matters.</div></div>
+          </div>
+
+          <h3 style="margin-top:12px">Dockerfile Example</h3>
+          <div style="display:flex;gap:8px;align-items:start">
+            <pre id="dockerfile"><code>FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+COPY . ./
+CMD ["python","app.py"]
+</code></pre>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="copy-btn" onclick="copyCode('dockerfile')">Copy</button>
+            </div>
+          </div>
+
+          <h3 style="margin-top:12px">Quick Commands</h3>
+          <pre><code># build image
+docker build -t myapp:1.0 .
+
+# run container
+docker run --rm -p 8000:8000 myapp:1.0
+
+# list running containers
+docker ps
+</code></pre>
+        </section>
+
+        <section id="k8s" class="card section">
+          <h2>Kubernetes — Orchestration at Scale</h2>
+          <p>Kubernetes (k8s) schedules and manages containerized applications across a cluster of machines. It provides service discovery, load balancing, self-healing, scaling, and declarative configuration via YAML manifests.</p>
+
+          <div class="feature-list">
+            <div class="feature"><div class="badge">Control</div><div>Declarative control plane: API server, etcd, scheduler, controller-manager.</div></div>
+            <div class="feature"><div class="badge">Node</div><div>Worker nodes run kubelet and container runtime (CRI).</div></div>
+            <div class="feature"><div class="badge">Objects</div><div>Pods, Services, Deployments, StatefulSets, DaemonSets.</div></div>
+          </div>
+
+          <h3 style="margin-top:12px">Sample Deployment (YAML)</h3>
+          <pre id="k8s-yaml"><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myorg/myapp:1.0
+        ports:
+        - containerPort: 8000
+</code></pre>
+          <div style="margin-top:8px"><button class="copy-btn" onclick="copyCode('k8s-yaml')">Copy YAML</button></div>
+
+          <h3 style="margin-top:12px">Quick Commands</h3>
+          <pre><code># apply manifest
+kubectl apply -f deployment.yaml
+
+# view pods
+kubectl get pods
+
+# scale
+kubectl scale deployment myapp-deploy --replicas=5
+</code></pre>
+        </section>
+
+        <section id="compare" class="card section">
+          <h2>Side-by-side Comparison</h2>
+          <div class="compare">
+            <div class="col"><h4>KVM</h4><p>Full VMs, hardware-level virtualization, heavier but stronger isolation. Good for running different OSes and multi-tenant workloads.</p></div>
+            <div class="col"><h4>Docker</h4><p>Lightweight containers sharing host kernel. Fast startup and perfect for microservices and dev workflows.</p></div>
+            <div class="col"><h4>Kubernetes</h4><p>Orchestrator to run containers across clusters. Handles scaling, healing and service discovery — not a runtime itself.</p></div>
+          </div>
+
+          <h3 style="margin-top:12px">When to choose what</h3>
+          <ul>
+            <li>Need multiple OS kernels? <strong>KVM</strong>.</li>
+            <li>Need fast, reproducible app packaging? <strong>Docker</strong>.</li>
+            <li>Need to run many containers across machines with auto-scaling? <strong>Kubernetes</strong>.</li>
+          </ul>
+        </section>
+
+        <section id="glossary" class="card section">
+          <h2>Glossary & Resources</h2>
+          <dl>
+            <dt>KVM</dt>
+            <dd>Kernel-based Virtual Machine — an in-kernel hypervisor for Linux.</dd>
+            <dt>Namespace</dt>
+            <dd>Linux kernel feature isolating process view of resources (PID, network, mount).</dd>
+            <dt>Cgroup</dt>
+            <dd>Control groups — kernel feature to limit resource usage (CPU, memory, IO).</dd>
+            <dt>Pod</dt>
+            <dd>Smallest deployable unit in Kubernetes — one or more containers that share network and storage.</dd>
+          </dl>
+
+          <h3 style="margin-top:12px">Learn more</h3>
+          <ul>
+            <li><a href="https://www.linux-kvm.org" target="_blank" rel="noopener">KVM Project</a></li>
+            <li><a href="https://www.docker.com" target="_blank" rel="noopener">Docker</a></li>
+            <li><a href="https://kubernetes.io" target="_blank" rel="noopener">Kubernetes</a></li>
+          </ul>
+        </section>
+
+        <section class="card section">
+          <h2>Hands-on Lab Ideas</h2>
+          <ol>
+            <li>Create a tiny Ubuntu VM with KVM and access it with SSH.</li>
+            <li>Package a simple Flask app as a Docker image and run it locally.</li>
+            <li>Deploy the image to a single-node Kubernetes cluster (minikube or kind) and scale it.</li>
+          </ol>
+        </section>
+
+      </main>
+
+      <aside>
+        <div class="card">
+          <h3>Contents</h3>
+          <div class="toc">
+            <a href="#intro">Introduction</a>
+            <a href="#kvm">KVM</a>
+            <a href="#docker">Docker</a>
+            <a href="#k8s">Kubernetes</a>
+            <a href="#compare">Compare</a>
+            <a href="#glossary">Glossary</a>
+          </div>
+
+          <hr style="border-color:rgba(255,255,255,0.03);margin:12px 0">
+
+          <h4>Quick Cheats</h4>
+          <pre><code>docker ps
+kubectl get pods
+virsh list --all
+</code></pre>
+
+          <hr style="border-color:rgba(255,255,255,0.03);margin:12px 0">
+          <h4>Mini Quiz</h4>
+          <p style="color:var(--muted)">Which offers stronger kernel isolation: <strong>KVM</strong> or <strong>Docker</strong>?</p>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h4>About</h4>
+          <p style="color:var(--muted)">Created as a starter educational resource for developers and students learning about virtualization and cloud native technologies.</p>
+          <p style="margin:0;margin-top:8px;color:var(--muted)">Want a dark/light toggle, printable handout, or ready-to-deploy GitHub Pages version? Ask and I’ll add it.</p>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <small>© Virtualization Unveiled • Built for learning • Last updated: Nov 7, 2025</small>
+    </footer>
+  </div>
+
+  <script>
+    function scrollToSection(id){document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'})}
+
+    function copyCode(elId){
+      const txt = document.getElementById(elId).innerText;
+      navigator.clipboard.writeText(txt).then(()=>{
+        alert('Copied to clipboard — paste into your editor.');
+      }).catch(()=>{
+        alert('Copy failed — select and copy manually.');
+      });
+    }
+  </script>
+</body>
+</html>
+
